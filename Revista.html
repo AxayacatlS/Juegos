@@ -3,17 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Material de Estudio y Quiz (Revista)</title>
+    <title>Material de Estudio y Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #4CAF50; /* Verde vibrante */
+            --secondary-color: #2196F3; /* Azul medio */
+            --accent-color: #FFC107; /* Amarillo para detalles */
+            --dark-bg: #2C3E50; /* Fondo oscuro principal */
+            --light-bg: #ECF0F1; /* Fondo claro para elementos */
+            --text-color: #333;
+            --light-text-color: #ECF0F1;
+            --border-radius: 10px;
+            --button-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            --container-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Montserrat', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
             min-height: 100vh;
-            background-color: #f0f2f5;
-            color: #333;
+            background: linear-gradient(to right, #6a11cb 0%, #2575fc 100%); /* Degradado moderno */
+            color: var(--light-text-color);
             margin: 0;
             padding: 20px;
             box-sizing: border-box;
@@ -21,99 +35,141 @@
         }
 
         h1 {
-            color: #0056b3;
-            margin-bottom: 25px;
-            font-size: clamp(2em, 5vw, 3em);
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
-        }
-
-        #pdf-viewer-container {
-            width: 100%;
-            max-width: 800px; /* Ancho máximo para el visor */
-            height: 70vh; /* Altura del visor */
+            color: var(--accent-color); /* Amarillo vibrante */
             margin-bottom: 30px;
-            border: 2px solid #007bff;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            background-color: #fff;
-            position: relative; /* Para posicionar controles de página */
-            overflow: hidden; /* Oculta cualquier desbordamiento del canvas */
+            font-size: clamp(2.2em, 5vw, 3.5em);
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+            font-weight: 700;
         }
 
-        canvas {
-            display: block; /* Elimina espacio extra debajo del canvas */
-            width: 100%;
-            height: 100%;
-            object-fit: contain; /* Ajusta la página del PDF dentro del canvas */
-            background-color: #ccc; /* Color mientras carga o si no hay PDF */
-        }
-
-        .pdf-controls {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
+        #image-viewer-container {
+            /* Dimensiones para proporción de hoja carta (aprox. 1:1.29) */
+            width: 600px; /* Ancho fijo */
+            height: 780px; /* Alto fijo, calculado para proporción carta (600 * 1.294) */
+            margin-bottom: 20px; /* Espacio antes de los controles */
+            border: 3px solid var(--secondary-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--container-shadow);
+            background-color: var(--light-bg);
+            position: relative;
             display: flex;
-            gap: 10px;
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 8px 15px;
-            border-radius: 5px;
-            color: white;
-            font-size: 0.9em;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+
+            /* Responsividad para pantallas pequeñas */
+            max-width: calc(100% - 40px);
+            max-height: 80vh; /* Permite más alto en móviles para la proporción */
+        }
+        
+        /* Ajuste para que el contenedor use el tamaño fijo en pantallas grandes */
+        @media (min-width: 768px) {
+            #image-viewer-container {
+                width: 600px; /* Mantiene el ancho fijo en pantallas grandes */
+                height: 780px; /* Mantiene el alto fijo en pantallas grandes */
+            }
         }
 
-        .pdf-controls button {
-            background-color: #007bff;
+        #magazine-page {
+            max-width: 100%;
+            max-height: 100%;
+            display: block;
+            object-fit: contain;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .image-controls {
+            /* Ahora fuera del contenedor principal, en el flujo normal */
+            display: flex;
+            gap: 15px;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            color: var(--light-text-color);
+            font-size: clamp(0.8em, 2vw, 1em);
+            box-shadow: var(--button-shadow);
+            margin-bottom: 35px; /* Espacio entre controles y botón de quiz */
+        }
+
+        .image-controls button {
+            background-color: var(--secondary-color);
             color: white;
             border: none;
-            padding: 8px 12px;
+            padding: 10px 15px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 1em;
-            transition: background-color 0.2s ease;
+            font-size: clamp(0.9em, 2.5vw, 1.1em);
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            font-weight: 600;
         }
 
-        .pdf-controls button:hover {
-            background-color: #0056b3;
+        .image-controls button:hover {
+            background-color: #1976D2;
+            transform: translateY(-2px);
+        }
+
+        .image-controls button:active {
+            transform: translateY(0);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .image-controls button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        #page-info {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
         }
 
         .quiz-button {
             display: inline-block;
-            padding: 15px 30px;
-            font-size: clamp(1.1em, 3vw, 1.6em);
-            font-weight: bold;
+            padding: 18px 35px;
+            font-size: clamp(1.2em, 3.5vw, 1.8em);
+            font-weight: 700;
             color: white;
-            background-color: #28a745;
+            background-color: var(--primary-color);
             border: none;
-            border-radius: 8px;
+            border-radius: var(--border-radius);
             cursor: pointer;
             text-decoration: none;
             transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--button-shadow);
+            /* margin-top: 20px; Ya no es necesario si los controles tienen margin-bottom */
         }
 
         .quiz-button:hover {
-            background-color: #218838;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+            background-color: #388E3C;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
         }
 
         .quiz-button:active {
             transform: translateY(0);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
         }
 
-        /* Ajuste para pantallas muy pequeñas */
+        /* Pequeño ajuste para pantallas muy pequeñas */
         @media (max-width: 480px) {
-            #pdf-viewer-container {
-                height: 60vh;
+            h1 {
+                margin-bottom: 20px;
             }
-            .pdf-controls {
-                font-size: 0.8em;
-                gap: 5px;
-                padding: 6px 10px;
+            .image-controls {
+                flex-wrap: wrap;
+                justify-content: center;
+                padding: 8px 10px;
+                gap: 8px;
+                margin-bottom: 25px; /* Ajuste para móviles */
             }
-            .pdf-controls button {
-                padding: 6px 10px;
+            .image-controls button {
+                padding: 8px 10px;
+            }
+            .quiz-button {
+                padding: 15px 25px;
             }
         }
     </style>
@@ -122,154 +178,93 @@
 
     <h1>Material de Estudio</h1>
 
-    <div id="pdf-viewer-container">
-        <canvas id="pdf-canvas"></canvas>
-        <div class="pdf-controls">
-            <button id="prev-page">← Anterior</button>
-            <span id="page-num"></span> / <span id="page-count"></span>
-            <button id="next-page">Siguiente →</button>
-        </div>
+    <div id="image-viewer-container">
+        <img id="magazine-page" src="" alt="Página de la revista">
+    </div>
+
+    <div class="image-controls">
+        <button id="prev-page">← Anterior</button>
+        <span id="page-info">Página <span id="current-page-num">1</span> de <span id="total-pages-count"></span></span>
+        <button id="next-page">Siguiente →</button>
     </div>
 
     <a href="Quiz.html" class="quiz-button">Ir al Quiz de Conocimientos</a>
 
-    <script src="./pdfjs/build/pdf.js"></script>
     <script>
-        // Establece la ruta del worker de PDF.js (¡IMPORTANTE!)
-        // Asegúrate de que esta ruta sea correcta para tu estructura de carpetas
-        pdfjsLib.workerSrc = './pdfjs/build/pdf.worker.js';
+        // --- CONFIGURACIÓN IMPORTANTE ---
+        const imageBaseUrl = './'; // Carpeta donde están tus imágenes
+        const totalPages = 13; // ¡Asegúrate de que este número sea exacto (de 1 a 13)!
+        const imageExtension = 'jpg'; // O 'png' si tus imágenes son PNG
 
-        const pdfUrl = 'tu_documento_aqui.pdf'; // ¡REEMPLAZA ESTO CON LA RUTA A TU PDF!
-        let pdfDoc = null; // Objeto PDF
-        let pageNum = 1; // Página actual
-        let pageRendering = false;
-        let pageNumPending = null;
+        // --- FIN DE CONFIGURACIÓN ---
 
-        const canvas = document.getElementById('pdf-canvas');
-        const ctx = canvas.getContext('2d');
-        const pageNumSpan = document.getElementById('page-num');
-        const pageCountSpan = document.getElementById('page-count');
+        let currentPage = 1;
+
+        const magazinePage = document.getElementById('magazine-page');
+        const currentPageNumSpan = document.getElementById('current-page-num');
+        const totalPagesCountSpan = document.getElementById('total-pages-count');
         const prevPageBtn = document.getElementById('prev-page');
         const nextPageBtn = document.getElementById('next-page');
 
-        /**
-         * Get page info from document, resize canvas accordingly, and render page.
-         * @param num Page number.
-         */
-        async function renderPage(num) {
-            pageRendering = true;
-            // Using promise to fetch the page
-            const page = await pdfDoc.getPage(num);
+        function loadImagePage(pageNumber) {
+            // Animación: Baja la opacidad antes de cambiar la imagen
+            magazinePage.style.opacity = '0'; 
 
-            const viewport = page.getViewport({ scale: 1 });
+            // Formatea el número de página a 4 dígitos con ceros iniciales (ej: 1 -> 0001)
+            const formattedPageNumber = String(pageNumber).padStart(4, '0');
+            // Construye el nombre del archivo: "img - 0001.jpg"
+            const imageUrl = `${imageBaseUrl}img - ${formattedPageNumber}.${imageExtension}`;
+            
+            // Espera un momento antes de cambiar la fuente y subir la opacidad
+            // Esto crea una transición suave
+            setTimeout(() => {
+                magazinePage.src = imageUrl;
+                magazinePage.onload = () => { // Asegura que la opacidad suba solo cuando la imagen cargue
+                    magazinePage.style.opacity = '1';
+                };
+            }, 200); // 200ms de espera para la transición
 
-            // Calculate scale to fit the canvas container
-            const container = document.getElementById('pdf-viewer-container');
-            const containerWidth = container.clientWidth;
-            const containerHeight = container.clientHeight;
-
-            const scaleX = containerWidth / viewport.width;
-            const scaleY = containerHeight / viewport.height;
-            const renderScale = Math.min(scaleX, scaleY);
-
-            const scaledViewport = page.getViewport({ scale: renderScale });
-
-            canvas.height = scaledViewport.height;
-            canvas.width = scaledViewport.width;
-
-            // Render PDF page into canvas context
-            const renderContext = {
-                canvasContext: ctx,
-                viewport: scaledViewport
-            };
-            const renderTask = page.render(renderContext);
-
-            // Wait for rendering to finish
-            await renderTask.promise;
-            pageRendering = false;
-            if (pageNumPending !== null) {
-                // New page rendering is pending
-                renderPage(pageNumPending);
-                pageNumPending = null;
-            }
-
-            pageNumSpan.textContent = num;
+            currentPageNumSpan.textContent = pageNumber;
+            updateButtonStates();
         }
 
-        /**
-         * If another page rendering in progress, waits until the rendering is
-         * finished. Otherwise, executes rendering immediately.
-         */
-        function queueRenderPage(num) {
-            if (pageRendering) {
-                pageNumPending = num;
-            } else {
-                renderPage(num);
-            }
+        function updateButtonStates() {
+            prevPageBtn.disabled = currentPage <= 1;
+            nextPageBtn.disabled = currentPage >= totalPages;
         }
 
-        /**
-         * Displays previous page.
-         */
         function onPrevPage() {
-            if (pageNum <= 1) {
-                return;
+            if (currentPage > 1) {
+                currentPage--;
+                loadImagePage(currentPage);
             }
-            pageNum--;
-            queueRenderPage(pageNum);
         }
-        prevPageBtn.addEventListener('click', onPrevPage);
 
-        /**
-         * Displays next page.
-         */
         function onNextPage() {
-            if (pageNum >= pdfDoc.numPages) {
-                return;
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadImagePage(currentPage);
             }
-            pageNum++;
-            queueRenderPage(pageNum);
         }
+
+        // Event Listeners
+        prevPageBtn.addEventListener('click', onPrevPage);
         nextPageBtn.addEventListener('click', onNextPage);
 
-        // Asynchronously downloads PDF.
-        pdfjsLib.getDocument(pdfUrl).promise.then(function(pdfDoc_) {
-            pdfDoc = pdfDoc_;
-            pageCountSpan.textContent = pdfDoc.numPages;
-            renderPage(pageNum);
-        }).catch(function(error) {
-            console.error('Error al cargar el PDF:', error);
-            alert('No se pudo cargar el PDF. Asegúrate de que la ruta sea correcta y el archivo exista.');
-            document.getElementById('pdf-viewer-container').innerHTML = `<p style="color:red; text-align:center;">Error al cargar el PDF. Revisa la consola para más detalles.</p>`;
+        // Inicializar la vista
+        document.addEventListener('DOMContentLoaded', () => {
+            totalPagesCountSpan.textContent = totalPages;
+            loadImagePage(currentPage);
         });
 
-        // Vuelve a renderizar la página si el tamaño de la ventana cambia
-        window.addEventListener('resize', () => {
-            if (pdfDoc) {
-                queueRenderPage(pageNum);
+        // Opcional: Navegación con flechas del teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                onPrevPage();
+            } else if (e.key === 'ArrowRight') {
+                onNextPage();
             }
         });
-
-        // Asegurarse de que los botones estén deshabilitados si no hay más páginas
-        function updatePageButtons() {
-            prevPageBtn.disabled = pageNum <= 1;
-            nextPageBtn.disabled = pageNum >= pdfDoc.numPages;
-        }
-
-        // Modifica renderPage para actualizar el estado de los botones
-        const originalRenderPage = renderPage;
-        renderPage = async function(num) {
-            await originalRenderPage(num);
-            updatePageButtons();
-        };
-
-        // Llama a updatePageButtons inicialmente y cuando el PDF se carga
-        if (pdfDoc) {
-            updatePageButtons();
-        } else {
-            prevPageBtn.disabled = true;
-            nextPageBtn.disabled = true;
-        }
 
     </script>
 </body>
