@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego del Gato (Tic-Tac-Toe)</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #282c34; /* Fondo oscuro */
+            color: #61dafb; /* Color brillante para texto principal */
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: clamp(2em, 5vw, 3.5em);
+            margin-bottom: 20px;
+            color: #98c379; /* Verde para el título */
+        }
+
+        #status {
+            font-size: clamp(1.2em, 3vw, 2em);
+            margin-bottom: 25px;
+            font-weight: bold;
+            min-height: 1.5em; /* Para evitar saltos al cambiar de texto */
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            width: clamp(200px, 80vmin, 450px); /* Tamaño responsivo del tablero */
+            height: clamp(200px, 80vmin, 450px);
+            border: 5px solid #61dafb;
+            background-color: #44475a; /* Fondo de las celdas */
+            gap: 5px; /* Espacio entre celdas */
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            margin-bottom: 30px;
+        }
+
+        .cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #282c34; /* Color de celda individual */
+            font-size: clamp(3em, 15vw, 6em); /* Tamaño de X/O responsivo */
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            user-select: none; /* Previene la selección de texto */
+        }
+
+        .cell:hover {
+            background-color: #3d404b; /* Color al pasar el ratón */
+        }
+
+        .cell.x {
+            color: #e06c75; /* Rojo para X */
+        }
+
+        .cell.o {
+            color: #d19a66; /* Naranja para O */
+        }
+
+        #reset-button {
+            padding: 12px 25px;
+            font-size: clamp(1em, 3vw, 1.5em);
+            background-color: #c678dd; /* Morado para el botón */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        #reset-button:hover {
+            background-color: #9c4cb3;
+            transform: translateY(-2px);
+        }
+
+        #reset-button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Juego del Gato</h1>
+    <div id="status">Es el turno de: <span id="current-player">X</span></div>
+    <div id="game-board">
+        </div>
+    <button id="reset-button">Reiniciar Juego</button>
+
+    <script>
+        const board = ['', '', '', '', '', '', '', '', '']; // Representa el tablero (9 celdas)
+        let currentPlayer = 'X'; // El jugador actual, empieza con X
+        let gameActive = true; // Indica si el juego está en curso
+        const winningConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Filas
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columnas
+            [0, 4, 8], [2, 4, 6]             // Diagonales
+        ];
+
+        const gameBoard = document.getElementById('game-board');
+        const statusDisplay = document.getElementById('status');
+        const currentPlayerSpan = document.getElementById('current-player');
+        const resetButton = document.getElementById('reset-button');
+
+        // Función para inicializar el tablero en el HTML
+        function initializeGame() {
+            gameBoard.innerHTML = ''; // Limpiar el tablero anterior
+            board.fill(''); // Vaciar el array del tablero
+            currentPlayer = 'X'; // Reiniciar al jugador X
+            gameActive = true; // El juego está activo
+            currentPlayerSpan.textContent = currentPlayer; // Actualizar el estado
+            statusDisplay.textContent = `Es el turno de: `;
+            statusDisplay.appendChild(currentPlayerSpan);
+
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.dataset.index = i; // Guardar el índice de la celda
+                cell.addEventListener('click', handleCellClick);
+                gameBoard.appendChild(cell);
+            }
+        }
+
+        // Manejador de clics en las celdas
+        function handleCellClick(event) {
+            const clickedCell = event.target;
+            const clickedCellIndex = parseInt(clickedCell.dataset.index);
+
+            // Si la celda ya está ocupada o el juego no está activo, no hacer nada
+            if (board[clickedCellIndex] !== '' || !gameActive) {
+                return;
+            }
+
+            // Actualizar el tablero y la interfaz
+            board[clickedCellIndex] = currentPlayer;
+            clickedCell.textContent = currentPlayer;
+            clickedCell.classList.add(currentPlayer.toLowerCase()); // Añadir clase 'x' o 'o' para el color
+
+            checkResult(); // Verificar si hay ganador o empate
+        }
+
+        // Función para verificar si hay un ganador o empate
+        function checkResult() {
+            let roundWon = false;
+            for (let i = 0; i < winningConditions.length; i++) {
+                const winCondition = winningConditions[i];
+                const a = board[winCondition[0]];
+                const b = board[winCondition[1]];
+                const c = board[winCondition[2]];
+
+                // Si alguna de las celdas está vacía, no hay ganador en esta condición
+                if (a === '' || b === '' || c === '') {
+                    continue;
+                }
+                // Si las tres celdas son iguales, hay un ganador
+                if (a === b && b === c) {
+                    roundWon = true;
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                statusDisplay.textContent = `¡El jugador ${currentPlayer} ha ganado! 🎉`;
+                statusDisplay.style.color = '#98c379'; // Verde para el mensaje de victoria
+                gameActive = false; // Detener el juego
+                return;
+            }
+
+            // Si no hay ganador, verificar si hay un empate (todas las celdas ocupadas)
+            const roundDraw = !board.includes('');
+            if (roundDraw) {
+                statusDisplay.textContent = `¡Empate! 🤝`;
+                statusDisplay.style.color = '#d19a66'; // Naranja para el mensaje de empate
+                gameActive = false; // Detener el juego
+                return;
+            }
+
+            // Si no hay ganador ni empate, cambiar al siguiente jugador
+            changePlayer();
+        }
+
+        // Función para cambiar el turno del jugador
+        function changePlayer() {
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            currentPlayerSpan.textContent = currentPlayer;
+            statusDisplay.style.color = '#61dafb'; // Restaurar color de texto
+        }
+
+        // Event listener para el botón de reinicio
+        resetButton.addEventListener('click', initializeGame);
+
+        // Iniciar el juego cuando la página carga
+        initializeGame();
+    </script>
+</body>
+</html>

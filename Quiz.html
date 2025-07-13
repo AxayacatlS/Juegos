@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Conocimientos</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #2c3e50; /* Azul oscuro */
+            color: #ecf0f1; /* Blanco claro */
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        h1 {
+            color: #f1c40f; /* Amarillo */
+            margin-bottom: 25px;
+            font-size: clamp(2em, 5vw, 3.2em);
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
+        }
+
+        #quiz-container {
+            background-color: #34495e; /* Azul más claro para el contenedor */
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            max-width: 600px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        #question-display {
+            font-size: clamp(1.1em, 3vw, 1.6em);
+            margin-bottom: 25px;
+            color: #ecf0f1;
+            min-height: 3em; /* Para dar espacio a preguntas largas */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.4;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .option-button {
+            background-color: #2980b9; /* Azul medio */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: clamp(0.9em, 2.5vw, 1.2em);
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            text-align: left; /* Alinea el texto a la izquierda */
+        }
+
+        .option-button:hover {
+            background-color: #3498db; /* Azul más claro al pasar el ratón */
+            transform: translateY(-2px);
+        }
+
+        .option-button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .option-button.correct {
+            background-color: #27ae60; /* Verde para respuesta correcta */
+            box-shadow: 0 0 10px #27ae60;
+            pointer-events: none; /* Desactiva clics después de responder */
+        }
+
+        .option-button.incorrect {
+            background-color: #e74c3c; /* Rojo para respuesta incorrecta */
+            box-shadow: 0 0 10px #e74c3c;
+            pointer-events: none; /* Desactiva clics después de responder */
+        }
+
+        #feedback-display {
+            font-size: clamp(1em, 2.5vw, 1.4em);
+            margin-bottom: 20px;
+            min-height: 1.5em; /* Para evitar saltos */
+            font-weight: bold;
+        }
+
+        #next-button, #restart-button {
+            background-color: #e67e22; /* Naranja */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: clamp(1em, 2.5vw, 1.3em);
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        #next-button:hover, #restart-button:hover {
+            background-color: #d35400; /* Naranja más oscuro */
+            transform: translateY(-2px);
+        }
+
+        #next-button:active, #restart-button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        #score-display {
+            font-size: clamp(1.2em, 3vw, 1.8em);
+            color: #ecf0f1;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Quiz de Conocimientos</h1>
+
+    <div id="quiz-container">
+        <div id="question-display"></div>
+        <div class="options-container" id="options-container"></div>
+        <div id="feedback-display"></div>
+        <button id="next-button">Siguiente Pregunta</button>
+        <button id="restart-button" style="display: none;">Reiniciar Quiz</button>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "¿Qué es la tecnología?",
+                options: [
+                    "Un conjunto de reglas gramaticales.",
+                    "Un conjunto de conocimientos, herramientas y procesos para resolver problemas.",
+                    "Una forma de arte moderno.",
+                    "Un tipo de comida procesada."
+                ],
+                answer: "Un conjunto de conocimientos, herramientas y procesos para resolver problemas."
+            },
+            {
+                question: "¿Cuál de los siguientes NO es un ejemplo de tecnología mencionada?",
+                options: [
+                    "Celulares",
+                    "Computadoras",
+                    "Internet",
+                    "Pinturas al óleo"
+                ],
+                answer: "Pinturas al óleo"
+            },
+            {
+                question: "¿Qué conceptos se asocian a 'Tecnología' en un sentido avanzado?",
+                options: [
+                    "Fantasía, Magia, Ilusión",
+                    "Inteligencia Artificial, Robótica, Realidad Virtual",
+                    "Historia, Geografía, Matemáticas",
+                    "Cocina, Costura, Jardinería"
+                ],
+                answer: "Inteligencia Artificial, Robótica, Realidad Virtual"
+            },
+            {
+                question: "¿Qué conceptos se asocian a 'Aprendizaje'?",
+                options: [
+                    "Paseo, Dormir, Comer",
+                    "Educación, Innovación, Conocimiento",
+                    "Correr, Saltar, Nadar",
+                    "Cantar, Bailar, Dibujar"
+                ],
+                answer: "Educación, Innovación, Conocimiento"
+            },
+            {
+                question: "¿Qué implica la Tecnología Educativa?",
+                options: [
+                    "Solo el uso de pizarras tradicionales.",
+                    "La prohibición de dispositivos en el aula.",
+                    "El uso de dispositivos tecnológicos para facilitar el aprendizaje.",
+                    "Exclusivamente el aprendizaje en línea sin interacción."
+                ],
+                answer: "El uso de dispositivos tecnológicos para facilitar el aprendizaje."
+            },
+            {
+                question: "¿Qué ejemplo de herramienta tecnológica educativa NO fue mencionado?",
+                options: [
+                    "Internet",
+                    "Computadoras",
+                    "Libros impresos",
+                    "Teléfonos"
+                ],
+                answer: "Libros impresos"
+            },
+            {
+                question: "Según la perspectiva 'Conductista', ¿cómo es el alumno ante la información tecnológica?",
+                options: [
+                    "Participante activo alrededor significativo",
+                    "Procesador activo de la información",
+                    "Colaborador, mediador agente crítico",
+                    "Pasivo perceptor de información"
+                ],
+                answer: "Pasivo perceptor de información"
+            },
+            {
+                question: "Si un alumno es un 'Procesador activo de la información', ¿qué perspectiva de la tecnología y el alumno representa?",
+                options: [
+                    "Conductista",
+                    "Cognitivo",
+                    "Constructiva",
+                    "Socio Cultural"
+                ],
+                answer: "Cognitivo"
+            },
+            {
+                question: "Una norma importante para el uso de la tecnología en la educación es usarla con...",
+                options: [
+                    "Libertad total",
+                    "Responsabilidad y con permiso del docente",
+                    "Solo para jugar",
+                    "Solo para ver videos"
+                ],
+                answer: "Responsabilidad y con permiso del docente"
+            },
+            {
+                question: "¿Qué tipo de norma ética se mencionó?",
+                options: [
+                    "Uso con fines educativos",
+                    "Reglamentos escolares",
+                    "No compartir datos personales",
+                    "Piratería"
+                ],
+                answer: "No compartir datos personales"
+            },
+            {
+                question: "¿La 'Infancia y Desarrollo' abarca desde el nacimiento hasta...?",
+                options: [
+                    "La vejez",
+                    "La adolescencia",
+                    "La mitad de la vida",
+                    "La edad adulta"
+                ],
+                answer: "La adolescencia"
+            },
+            {
+                question: "¿Cuál de los siguientes es un aspecto del Desarrollo Físico?",
+                options: [
+                    "Lenguaje",
+                    "Vínculos",
+                    "Habilidades Motoras",
+                    "Pensamiento"
+                ],
+                answer: "Habilidades Motoras"
+            },
+            {
+                question: "¿Qué concepto pertenece al Desarrollo Cognitivo?",
+                options: [
+                    "Crecimiento",
+                    "Emociones",
+                    "Aprendizajes",
+                    "Identidad"
+                ],
+                answer: "Aprendizajes"
+            },
+            {
+                question: "¿Por qué es importante abordar la sexualidad en la educación especial?",
+                options: [
+                    "Para prohibir ciertas conductas.",
+                    "Para que las personas con discapacidad no tengan pareja.",
+                    "Para asegurar que tengan acceso a información y apoyo para sus derechos sexuales.",
+                    "Solo para cumplir una ley."
+                ],
+                answer: "Para asegurar que tengan acceso a información y apoyo para sus derechos sexuales."
+            },
+            {
+                question: "¿Cuál de los siguientes es un derecho relacionado con la diversidad funcional y la sexualidad?",
+                options: [
+                    "El derecho a no ser informados.",
+                    "El derecho a que otros decidan por ellos.",
+                    "El derecho a tener una vida sexual independiente.",
+                    "El derecho a la ignorancia."
+                ],
+                answer: "El derecho a tener una vida sexual independiente."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let quizActive = false; // Controla si el quiz está en progreso
+
+        const questionDisplay = document.getElementById('question-display');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackDisplay = document.getElementById('feedback-display');
+        const nextButton = document.getElementById('next-button');
+        const restartButton = document.getElementById('restart-button');
+
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            quizActive = true;
+            nextButton.style.display = 'block';
+            restartButton.style.display = 'none';
+            displayQuestion();
+        }
+
+        function displayQuestion() {
+            feedbackDisplay.textContent = '';
+            optionsContainer.innerHTML = ''; // Limpiar opciones anteriores
+            
+            if (currentQuestionIndex < quizData.length) {
+                const question = quizData[currentQuestionIndex];
+                questionDisplay.textContent = question.question;
+
+                // Crear y mostrar botones de opción
+                question.options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.classList.add('option-button');
+                    button.textContent = option;
+                    button.addEventListener('click', () => checkAnswer(option, button));
+                    optionsContainer.appendChild(button);
+                });
+            } else {
+                // Fin del quiz
+                questionDisplay.textContent = `¡Quiz Terminado!`;
+                optionsContainer.innerHTML = `<p id="score-display">Tu puntuación final es: ${score} de ${quizData.length}</p>`;
+                feedbackDisplay.textContent = '¡Gracias por jugar!';
+                nextButton.style.display = 'none';
+                restartButton.style.display = 'block'; // Mostrar botón de reinicio
+                quizActive = false;
+            }
+        }
+
+        function checkAnswer(selectedOption, clickedButton) {
+            if (!quizActive) return; // Evita hacer clic después de terminar el quiz o responder
+
+            const correctAnswer = quizData[currentQuestionIndex].answer;
+            
+            // Deshabilitar todos los botones de opción después de la selección
+            Array.from(optionsContainer.children).forEach(button => {
+                button.disabled = true; // Deshabilitar el botón
+                button.style.pointerEvents = 'none'; // Evitar clics
+                if (button.textContent === correctAnswer) {
+                    button.classList.add('correct');
+                }
+            });
+
+            if (selectedOption === correctAnswer) {
+                score++;
+                feedbackDisplay.textContent = '¡Correcto! 🎉';
+                feedbackDisplay.style.color = '#27ae60'; // Verde
+            } else {
+                feedbackDisplay.textContent = `Incorrecto. La respuesta correcta era: "${correctAnswer}"`;
+                feedbackDisplay.style.color = '#e74c3c'; // Rojo
+                clickedButton.classList.add('incorrect');
+            }
+        }
+
+        nextButton.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length) {
+                currentQuestionIndex++;
+                displayQuestion();
+            }
+        });
+
+        restartButton.addEventListener('click', startQuiz);
+
+        // Iniciar el quiz cuando la página carga
+        startQuiz();
+    </script>
+</body>
+</html>
