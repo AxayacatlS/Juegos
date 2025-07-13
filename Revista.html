@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Material de Estudio y Quiz</title>
+    <title>Material de Estudio y Quiz (Revista)</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start; /* Alinea los elementos desde el inicio del viewport */
+            justify-content: flex-start;
             min-height: 100vh;
-            background-color: #f0f2f5; /* Un fondo gris claro */
+            background-color: #f0f2f5;
             color: #333;
             margin: 0;
             padding: 20px;
@@ -21,46 +21,78 @@
         }
 
         h1 {
-            color: #0056b3; /* Azul oscuro para el título */
+            color: #0056b3;
             margin-bottom: 25px;
             font-size: clamp(2em, 5vw, 3em);
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
         }
 
-        .pdf-viewer-container {
+        #pdf-viewer-container {
             width: 100%;
-            max-width: 900px; /* Ancho máximo para el visor de PDF */
-            height: 70vh; /* Altura del visor del PDF, 70% del alto del viewport */
+            max-width: 800px; /* Ancho máximo para el visor */
+            height: 70vh; /* Altura del visor */
             margin-bottom: 30px;
-            border: 2px solid #007bff; /* Borde azul */
+            border: 2px solid #007bff;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             background-color: #fff;
-            overflow: hidden; /* Asegura que el iframe no se desborde */
+            position: relative; /* Para posicionar controles de página */
+            overflow: hidden; /* Oculta cualquier desbordamiento del canvas */
         }
 
-        .pdf-viewer-container iframe {
+        canvas {
+            display: block; /* Elimina espacio extra debajo del canvas */
             width: 100%;
             height: 100%;
-            border: none; /* Elimina el borde predeterminado del iframe */
+            object-fit: contain; /* Ajusta la página del PDF dentro del canvas */
+            background-color: #ccc; /* Color mientras carga o si no hay PDF */
+        }
+
+        .pdf-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 8px 15px;
+            border-radius: 5px;
+            color: white;
+            font-size: 0.9em;
+        }
+
+        .pdf-controls button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s ease;
+        }
+
+        .pdf-controls button:hover {
+            background-color: #0056b3;
         }
 
         .quiz-button {
-            display: inline-block; /* Permite ajustar padding y margin */
+            display: inline-block;
             padding: 15px 30px;
             font-size: clamp(1.1em, 3vw, 1.6em);
             font-weight: bold;
             color: white;
-            background-color: #28a745; /* Verde para el botón */
+            background-color: #28a745;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            text-decoration: none; /* Quitar subrayado del enlace */
+            text-decoration: none;
             transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
         }
 
         .quiz-button:hover {
-            background-color: #218838; /* Verde más oscuro al pasar el ratón */
+            background-color: #218838;
             transform: translateY(-3px);
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
         }
@@ -70,10 +102,18 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
-        /* Pequeño ajuste para pantallas muy pequeñas */
+        /* Ajuste para pantallas muy pequeñas */
         @media (max-width: 480px) {
-            .pdf-viewer-container {
-                height: 60vh; /* Un poco menos de alto en móviles muy pequeños para dejar espacio */
+            #pdf-viewer-container {
+                height: 60vh;
+            }
+            .pdf-controls {
+                font-size: 0.8em;
+                gap: 5px;
+                padding: 6px 10px;
+            }
+            .pdf-controls button {
+                padding: 6px 10px;
             }
         }
     </style>
@@ -82,13 +122,155 @@
 
     <h1>Material de Estudio</h1>
 
-    <div class="pdf-viewer-container">
-        <iframe src="revista.pdf" type="application/pdf">
-            <p>Tu navegador no soporta iframes de PDF. Puedes <a href="tu_documento_aqui.pdf">descargar el PDF aquí</a>.</p>
-        </iframe>
+    <div id="pdf-viewer-container">
+        <canvas id="pdf-canvas"></canvas>
+        <div class="pdf-controls">
+            <button id="prev-page">← Anterior</button>
+            <span id="page-num"></span> / <span id="page-count"></span>
+            <button id="next-page">Siguiente →</button>
+        </div>
     </div>
 
     <a href="Quiz.html" class="quiz-button">Ir al Quiz de Conocimientos</a>
 
+    <script src="./pdfjs/build/pdf.js"></script>
+    <script>
+        // Establece la ruta del worker de PDF.js (¡IMPORTANTE!)
+        // Asegúrate de que esta ruta sea correcta para tu estructura de carpetas
+        pdfjsLib.workerSrc = './pdfjs/build/pdf.worker.js';
+
+        const pdfUrl = 'tu_documento_aqui.pdf'; // ¡REEMPLAZA ESTO CON LA RUTA A TU PDF!
+        let pdfDoc = null; // Objeto PDF
+        let pageNum = 1; // Página actual
+        let pageRendering = false;
+        let pageNumPending = null;
+
+        const canvas = document.getElementById('pdf-canvas');
+        const ctx = canvas.getContext('2d');
+        const pageNumSpan = document.getElementById('page-num');
+        const pageCountSpan = document.getElementById('page-count');
+        const prevPageBtn = document.getElementById('prev-page');
+        const nextPageBtn = document.getElementById('next-page');
+
+        /**
+         * Get page info from document, resize canvas accordingly, and render page.
+         * @param num Page number.
+         */
+        async function renderPage(num) {
+            pageRendering = true;
+            // Using promise to fetch the page
+            const page = await pdfDoc.getPage(num);
+
+            const viewport = page.getViewport({ scale: 1 });
+
+            // Calculate scale to fit the canvas container
+            const container = document.getElementById('pdf-viewer-container');
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+
+            const scaleX = containerWidth / viewport.width;
+            const scaleY = containerHeight / viewport.height;
+            const renderScale = Math.min(scaleX, scaleY);
+
+            const scaledViewport = page.getViewport({ scale: renderScale });
+
+            canvas.height = scaledViewport.height;
+            canvas.width = scaledViewport.width;
+
+            // Render PDF page into canvas context
+            const renderContext = {
+                canvasContext: ctx,
+                viewport: scaledViewport
+            };
+            const renderTask = page.render(renderContext);
+
+            // Wait for rendering to finish
+            await renderTask.promise;
+            pageRendering = false;
+            if (pageNumPending !== null) {
+                // New page rendering is pending
+                renderPage(pageNumPending);
+                pageNumPending = null;
+            }
+
+            pageNumSpan.textContent = num;
+        }
+
+        /**
+         * If another page rendering in progress, waits until the rendering is
+         * finished. Otherwise, executes rendering immediately.
+         */
+        function queueRenderPage(num) {
+            if (pageRendering) {
+                pageNumPending = num;
+            } else {
+                renderPage(num);
+            }
+        }
+
+        /**
+         * Displays previous page.
+         */
+        function onPrevPage() {
+            if (pageNum <= 1) {
+                return;
+            }
+            pageNum--;
+            queueRenderPage(pageNum);
+        }
+        prevPageBtn.addEventListener('click', onPrevPage);
+
+        /**
+         * Displays next page.
+         */
+        function onNextPage() {
+            if (pageNum >= pdfDoc.numPages) {
+                return;
+            }
+            pageNum++;
+            queueRenderPage(pageNum);
+        }
+        nextPageBtn.addEventListener('click', onNextPage);
+
+        // Asynchronously downloads PDF.
+        pdfjsLib.getDocument(pdfUrl).promise.then(function(pdfDoc_) {
+            pdfDoc = pdfDoc_;
+            pageCountSpan.textContent = pdfDoc.numPages;
+            renderPage(pageNum);
+        }).catch(function(error) {
+            console.error('Error al cargar el PDF:', error);
+            alert('No se pudo cargar el PDF. Asegúrate de que la ruta sea correcta y el archivo exista.');
+            document.getElementById('pdf-viewer-container').innerHTML = `<p style="color:red; text-align:center;">Error al cargar el PDF. Revisa la consola para más detalles.</p>`;
+        });
+
+        // Vuelve a renderizar la página si el tamaño de la ventana cambia
+        window.addEventListener('resize', () => {
+            if (pdfDoc) {
+                queueRenderPage(pageNum);
+            }
+        });
+
+        // Asegurarse de que los botones estén deshabilitados si no hay más páginas
+        function updatePageButtons() {
+            prevPageBtn.disabled = pageNum <= 1;
+            nextPageBtn.disabled = pageNum >= pdfDoc.numPages;
+        }
+
+        // Modifica renderPage para actualizar el estado de los botones
+        const originalRenderPage = renderPage;
+        renderPage = async function(num) {
+            await originalRenderPage(num);
+            updatePageButtons();
+        };
+
+        // Llama a updatePageButtons inicialmente y cuando el PDF se carga
+        if (pdfDoc) {
+            updatePageButtons();
+        } else {
+            prevPageBtn.disabled = true;
+            nextPageBtn.disabled = true;
+        }
+
+    </script>
 </body>
 </html>
