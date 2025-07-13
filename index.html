@@ -1,98 +1,86 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Laberinto Básico</title>
-  <style>
-    body {
-      background: #000;
-      margin: 0;
-      display: flex;
-      justify-content: center;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juegos Interactivos</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #1a1a2e; /* Un fondo oscuro atractivo */
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
 
-    canvas {
-      background-color: #eee;
-      margin-top: 20px;
-    }
-  </style>
+        h1 {
+            color: #0f4c75; /* Un azul más vibrante */
+            margin-bottom: 40px;
+            font-size: clamp(2em, 6vw, 3.5em); /* Título responsivo */
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column; /* Botones apilados verticalmente por defecto */
+            gap: 25px; /* Espacio entre botones */
+            width: 100%;
+            max-width: 400px; /* Ancho máximo para el contenedor de botones */
+        }
+
+        .game-button {
+            display: block; /* Ocupa todo el ancho disponible */
+            padding: 18px 30px;
+            font-size: clamp(1.2em, 4vw, 1.8em); /* Tamaño de fuente responsivo */
+            font-weight: bold;
+            color: white;
+            background-color: #3282b8; /* Un azul medio */
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none; /* Quitar subrayado de los enlaces */
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-button:hover {
+            background-color: #0f4c75; /* Azul más oscuro al pasar el ratón */
+            transform: translateY(-3px); /* Pequeño efecto de elevación */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .game-button:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Media query para pantallas más grandes (horizontal) */
+        @media (min-width: 768px) {
+            .button-container {
+                flex-direction: row; /* Botones en fila en pantallas más grandes */
+                max-width: 700px; /* Mayor ancho para los botones */
+            }
+            .game-button {
+                flex: 1; /* Distribuye el espacio equitativamente */
+            }
+        }
+    </style>
 </head>
 <body>
-<canvas id="game" width="320" height="320"></canvas>
 
-<script>
-  const canvas = document.getElementById("game");
-  const ctx = canvas.getContext("2d");
+    <h1>¡Elige tu juego!</h1>
 
-  const tileSize = 32;
-  const maze = [
-    "####################",
-    "#     #       #    #",
-    "# ### # ##### # ## #",
-    "# #   #     # #    #",
-    "# # ##### ### ######",
-    "#       #     #    #",
-    "##### # # ##### ## #",
-    "#   # # #       #  #",
-    "# # # ### ####### ##",
-    "# #     #       #  #",
-    "#################E##"
-  ];
+    <div class="button-container">
+        <a href="Laberinto.html" class="game-button">Jugar al Laberinto</a>
+        <a href="SopaLetras.html" class="game-button">Jugar Sopa de Letras</a>
+    </div>
 
-  let player = { x: 1, y: 1 };
-
-  function drawMaze() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    maze.forEach((row, y) => {
-      [...row].forEach((cell, x) => {
-        if (cell === "#") {
-          ctx.fillStyle = "black";
-        } else if (cell === "E") {
-          ctx.fillStyle = "green";
-        } else {
-          ctx.fillStyle = "white";
-        }
-        ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-      });
-    });
-
-    // Jugador
-    ctx.fillStyle = "blue";
-    ctx.fillRect(player.x * tileSize, player.y * tileSize, tileSize, tileSize);
-  }
-
-  function canMoveTo(x, y) {
-    const row = maze[y];
-    if (!row) return false;
-    const cell = row[x];
-    return cell !== "#";
-  }
-
-  window.addEventListener("keydown", (e) => {
-    let dx = 0, dy = 0;
-    if (e.key === "ArrowUp") dy = -1;
-    if (e.key === "ArrowDown") dy = 1;
-    if (e.key === "ArrowLeft") dx = -1;
-    if (e.key === "ArrowRight") dx = 1;
-
-    const newX = player.x + dx;
-    const newY = player.y + dy;
-
-    if (canMoveTo(newX, newY)) {
-      player.x = newX;
-      player.y = newY;
-    }
-
-    // Meta alcanzada
-    if (maze[player.y][player.x] === "E") {
-      alert("¡Ganaste!");
-      player = { x: 1, y: 1 };
-    }
-
-    drawMaze();
-  });
-
-  drawMaze();
-</script>
 </body>
 </html>
